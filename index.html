@@ -31,6 +31,7 @@
             background-color: #0b0b0f;
             color: #f3f4f6;
             font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            overflow-x: hidden;
         }
         section[id] { scroll-margin-top: 5rem; }
         .pixel-border { box-shadow: 4px 4px 0 0 #FF6900; }
@@ -65,6 +66,22 @@
         @keyframes kwIn { from { opacity: 0; transform: translateY(-2px); } to { opacity: 1; transform: none; } }
         .kw-in { animation: kwIn .25s ease-out both; }
 
+        /* Karaoke notes — анимация нот в инструментальных паузах */
+        @keyframes knoteFloat {
+            0%   { opacity: 0; transform: translateY(8px) scale(.8); }
+            25%  { opacity: 1; transform: translateY(0) scale(1); }
+            70%  { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-10px) scale(.9); }
+        }
+        .knote {
+            display: inline-block; margin-right: .7em;
+            color: #FF6900;
+            animation: knoteFloat 1.9s ease-in-out infinite;
+        }
+        .knote:nth-child(2n) { color: #6b7280; }
+        .knote:nth-child(3n) { animation-duration: 2.4s; }
+        .kpaused .knote, .kpaused .kw-in { animation-play-state: paused; }
+
         /* Splash typewriter */
         .qcaret { color: #FF6900; animation: blink 1s steps(1) infinite; }
 
@@ -90,7 +107,7 @@
 
     <!-- ============ HEADER ============ -->
     <header class="sticky top-0 z-50 bg-midark/85 backdrop-blur-md border-b border-gray-800">
-        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
             <a href="#about" class="flex items-center space-x-3 group min-w-0">
                 <span class="w-4 h-4 bg-miorange pixel-border-sm block shrink-0"></span>
                 <span class="font-bold pixel-font text-[11px] sm:text-sm md:text-lg tracking-wider group-hover:text-miorange transition whitespace-nowrap truncate">
@@ -120,11 +137,11 @@
         </nav>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-10 sm:py-14 space-y-20">
+    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-12 sm:space-y-16">
 
         <!-- ============ HERO ============ -->
-        <section id="about" class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div class="space-y-6">
+        <section id="about" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+            <div class="space-y-5 min-w-0">
                 <div class="inline-flex items-center gap-2 bg-miorange/10 text-miorange px-3 py-1.5 text-[11px] pixel-font border border-miorange/30">
                     <span class="w-2 h-2 bg-green-400 animate-pulse"></span>
                     STATUS: SYSTEM_ONLINE // GITHUB_PAGES_READY
@@ -147,7 +164,7 @@
                     </div>
                 </div>
 
-                <h1 class="pixel-font font-black leading-none whitespace-nowrap text-[21px] sm:text-3xl md:text-4xl xl:text-5xl tracking-tight">
+                <h1 class="pixel-font font-black leading-none whitespace-nowrap text-[20px] sm:text-3xl md:text-4xl tracking-tight">
                     <span class="text-miorange">ꗝ ||</span> B L E I Z <span class="text-miorange">(!)</span>
                 </h1>
 
@@ -173,7 +190,7 @@
             </div>
 
             <!-- Terminal -->
-            <div class="bg-micard border border-gray-800 pixel-border relative scanlines overflow-hidden">
+            <div class="bg-micard border border-gray-800 pixel-border relative scanlines overflow-hidden min-w-0">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-800 text-[11px] pixel-font text-gray-500">
                     <span class="text-gray-400">bash — opencode_mi_terminal</span>
                     <div class="flex space-x-1.5">
@@ -298,60 +315,43 @@
         </section>
 
         <!-- ============ ARCADE SNAKE ============ -->
-        <section id="arcade" class="space-y-6 pt-8 border-t border-gray-800">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold pixel-font">
-                        <span class="text-miorange">#</span> Arcade Snake [Pixel Edition]
-                    </h2>
-                    <p class="text-gray-400 text-sm mt-1">Стрелки / WASD на клавиатуре — или D-Pad ниже на телефоне. Кушай техно-токены: apple, python, c++, tsmc, intel, amd, linux, microsoft. Стены сквозные — змейка проходит сквозь них. Пока ты не взял управление, игра идёт в демо-режиме: автопилот сам ищет токены.</p>
-                </div>
-                <div class="flex items-center gap-3 pixel-font text-sm">
-                    <div class="bg-micard px-4 py-2 border border-gray-800">SCORE: <span id="snake-score" class="text-miorange font-bold">0</span></div>
-                    <div class="bg-micard px-4 py-2 border border-gray-800">BEST: <span id="snake-best" class="text-gray-300 font-bold">0</span></div>
-                    <button id="snake-restart" class="bg-miorange text-white px-4 py-2 font-bold pixel-border-sm hover:bg-orange-600 transition">RESTART</button>
+        <section id="arcade" class="pt-8 border-t border-gray-800">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                <h2 class="text-xl sm:text-2xl font-bold pixel-font">
+                    <span class="text-miorange">#</span> Arcade Snake
+                </h2>
+                <div class="flex items-center gap-2 pixel-font text-xs sm:text-sm">
+                    <div class="bg-micard px-3 py-1.5 border border-gray-800">SCORE: <span id="snake-score" class="text-miorange font-bold">0</span></div>
+                    <div class="bg-micard px-3 py-1.5 border border-gray-800">BEST: <span id="snake-best" class="text-gray-300 font-bold">0</span></div>
+                    <button id="snake-restart" class="bg-miorange text-white px-3 py-1.5 font-bold pixel-border-sm hover:bg-orange-600 transition">RESTART</button>
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8">
-                <div class="glass border border-gray-800 pixel-border w-full max-w-[440px]">
-                    <div class="flex items-center justify-between px-4 py-2 border-b border-gray-800 text-[11px] pixel-font text-gray-500">
-                        <span>bash — snake.tui --tokens=tech</span>
-                        <span class="text-miorange">[TUI]</span>
-                    </div>
-                    <div class="p-3 sm:p-4">
-                        <canvas id="snakeCanvas" width="400" height="420"
-                                class="w-full h-auto bg-midark border border-gray-800 block"></canvas>
-                    </div>
-                    <div class="px-4 py-3 border-t border-gray-800">
-                        <p class="text-[10px] pixel-font text-gray-600 mb-2">[ EATABLE TOKENS ]</p>
-                        <div id="snake-legend" class="flex flex-wrap gap-1.5"></div>
-                    </div>
+            <div class="flex flex-col items-center gap-5">
+                <div class="glass border border-gray-800 pixel-border w-full max-w-[400px] overflow-hidden">
+                    <canvas id="snakeCanvas" width="400" height="420"
+                            class="w-full h-auto bg-midark block select-none"></canvas>
                 </div>
 
                 <!-- D-Pad (touch controls) -->
-                <div class="lg:self-center">
-                    <p class="text-center text-[10px] pixel-font text-gray-500 mb-3">[ TOUCH D-PAD ]</p>
-                    <div class="grid grid-cols-3 gap-2 w-48 mx-auto">
-                        <span></span>
-                        <button class="dpad-btn h-14 bg-micard border border-gray-700 text-xl text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="up" aria-label="Up">▲</button>
-                        <span></span>
-                        <button class="dpad-btn h-14 bg-micard border border-gray-700 text-xl text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="left" aria-label="Left">◀</button>
-                        <button class="dpad-btn h-14 bg-miorange/10 border border-miorange/40 text-miorange text-xs pixel-font" id="dpad-pause" aria-label="Start">GO</button>
-                        <button class="dpad-btn h-14 bg-micard border border-gray-700 text-xl text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="right" aria-label="Right">▶</button>
-                        <span></span>
-                        <button class="dpad-btn h-14 bg-micard border border-gray-700 text-xl text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="down" aria-label="Down">▼</button>
-                        <span></span>
-                    </div>
-                    <p class="text-center text-[10px] pixel-font text-gray-600 mt-3">preventDefault: page won't scroll</p>
+                <div class="grid grid-cols-3 gap-1.5 w-40 sm:w-44">
+                    <span></span>
+                    <button class="dpad-btn h-11 bg-micard border border-gray-700 text-lg text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="up" aria-label="Up">▲</button>
+                    <span></span>
+                    <button class="dpad-btn h-11 bg-micard border border-gray-700 text-lg text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="left" aria-label="Left">◀</button>
+                    <button class="dpad-btn h-11 bg-miorange/10 border border-miorange/40 text-miorange text-xs pixel-font" id="dpad-pause" aria-label="Start">GO</button>
+                    <button class="dpad-btn h-11 bg-micard border border-gray-700 text-lg text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="right" aria-label="Right">▶</button>
+                    <span></span>
+                    <button class="dpad-btn h-11 bg-micard border border-gray-700 text-lg text-gray-300 active:bg-miorange active:text-white hover:border-miorange transition" data-dir="down" aria-label="Down">▼</button>
+                    <span></span>
                 </div>
             </div>
         </section>
     </main>
 
     <!-- ============ FOOTER ============ -->
-    <footer class="border-t border-gray-800 mt-16 py-10">
-        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-5">
+    <footer class="border-t border-gray-800 mt-12 py-8">
+        <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-5">
             <div class="flex items-center gap-3">
                 <span class="w-3 h-3 bg-miorange pixel-border-sm block"></span>
                 <span class="pixel-font text-xs text-gray-400">ꗝ || B L E I Z (!) <span class="text-gray-600">// 42_4c_5f_65_69_7a</span></span>
@@ -503,6 +503,7 @@
 
         const tgl = tpControls.querySelector('[data-tp="toggle"]');
         if (tgl) tgl.textContent = playing ? '[ ❚❚ PAUSE ]' : '[ ▶ PLAY ]';
+        if (karaokeEl) karaokeEl.classList.toggle('kpaused', !playing); /* пауза замирает и ноты тоже */
     }
 
     function tpShow() {
@@ -562,15 +563,15 @@
 
     /* --- караоке: слова трека печатаются в терминале по таймингу --- */
     const KARAOKE = [
-        [1.02, "А"], [1.62, "это"], [1.82, "песня"], [2.18, "про"], [2.46, "нашего"], [2.89, "барабанщика"], [3.32, "Андрея", 1], [4.34, "Я"], [4.62, "сходил"], [4.94, "к"], [5.1, "хирургу,"], [5.5, "и"], [5.6, "мне"], [5.72, "опять"], [5.92, "сделали"], [6.28, "перевязку,"], [6.82, "но"], [6.96, "всё"], [7.14, "в"], [7.3, "ранах,"], [7.56, "и"], [7.72, "мне"], [7.86, "очень"], [8.18, "больно"], [8.44, "ходить", 1], [8.56, "Блять,"], [8.76, "Андрей,"], [9.32, "я"], [9.51, "умоляю,"], [9.7, "завали"], [9.94, "своё"], [10.79, "ебало."], [11.65, "Спасибо", 1], [12.52, "Меня"], [13.04, "везут"], [13.48, "куда-то"], [13.97, "дяди"], [14.46, "в"], [14.52, "белых"], [15, "халатах", 1], [15.5, "Колят"], [15.92, "мне"], [18.06, "в"], [18.26, "зад"], [18.42, "препараты,"], [18.59, "хотят"], [18.75, "засунуть"], [18.91, "в"], [19.07, "палату", 1], [19.23, "Видите"], [19.4, "ли,"], [19.56, "бегать"], [19.98, "голым,"], [20.34, "кричать"], [20.68, "на"], [21.02, "бабушек"], [21.64, "гроулом"], [21.94, "нельзя", 1], [22.32, "Идите"], [22.96, "вы"], [23.08, "нахуй,"], [23.78, "я"], [23.78, "люблю"], [24.12, "Ивана"], [24.7, "Золо", 1], [25.14, "У"], [25.36, "психиатра"], [26.14, "был"], [26.36, "чаще,"], [26.76, "чем"], [26.98, "у"], [27.24, "себя,"], [27.68, "сука,"], [28, "дома", 1], [28.34, "Прикован"], [28.73, "к"], [29.12, "своей"], [29.36, "постели,"], [29.96, "жизнь"], [30.38, "протекала"], [31, "хуёво", 1], [31.58, "Выдовели"], [32.4, "меня,"], [32.94, "суки,"], [33.36, "так"], [33.4, "и"], [33.68, "не"], [33.86, "смог"], [34.04, "найти"], [34.4, "выход", 1], [34.61, "Быть"], [34.82, "только"], [35.28, "среди"], [35.82, "врачей"], [36.36, "страшнее"], [37, "любых,"], [37.47, "блять,"], [37.93, "пыток", 1], [38.4, "Блять,"], [38.92, "блять,"], [39.44, "блять,"], [39.96, "я"], [40.08, "больной,"], [40.54, "твою"], [41, "мать", 1], [41.28, "Я"], [41.52, "сумасшедший"], [42.3, "на"], [42.56, "голову,"], [43.26, "я"], [43.56, "кинутый"], [44.09, "Молотов", 1], [44.63, "Лечить"], [45.16, "зубы"], [45.56, "так"], [45.82, "дорого"], [46.08, "я"], [46.48, "дал"], [46.74, "в"], [46.82, "рот"], [47.29, "стоматологу", 1], [47.76, "Я"], [48.12, "уретру"], [48.96, "надрачивал"], [49.81, "сигаретой"], [50.66, "ментоловой", 1], [63.6, "Я,"], [63.9, "как"], [64.24, "Болконский"], [64.92, "на"], [65.08, "небо,"], [65.44, "смотрю"], [65.86, "на"], [66.08, "вульвы"], [66.55, "бабулек", 1], [67.02, "Залез"], [67.44, "в"], [67.54, "районную"], [68.11, "ребу,"], [68.68, "чтоб"], [68.84, "наркоманов"], [69.56, "побуллить", 1], [70.28, "Как"], [70.6, "охуенно"], [71.32, "быть"], [71.48, "глупым,"], [71.98, "я"], [72.04, "злодей"], [72.48, "Майкл"], [72.92, "Ягубиан", 1], [73.36, "Я"], [73.8, "стану"], [74.24, "собакой"], [74.7, "Бучера,"], [75.52, "а"], [75.58, "ты"], [75.68, "плюшевым"], [76.17, "супером", 1], [76.66, "Я"], [76.9, "был"], [77.12, "лишён"], [77.52, "крайней"], [77.92, "плоти,"], [78.32, "не"], [78.52, "помню"], [78.88, "всех"], [79.14, "своих"], [79.5, "близких", 1], [79.9, "Хирург"], [80.35, "вернёт"], [80.8, "мои"], [81.12, "деньги,"], [81.39, "здесь"], [81.66, "все"], [81.8, "слова"], [82.28, "будут"], [82.66, "лишни", 1], [83.1, "Сегодня"], [83.68, "на"], [84.06, "перевязку,"], [84.74, "я"], [84.96, "был"], [85.16, "лишён"], [85.53, "крайней"], [85.91, "плоти", 1], [86.28, "Ты"], [86.56, "наблюдаешь"], [87.4, "за"], [87.76, "нами:"], [88.12, "да,"], [88.16, "я,"], [88.48, "походу,"], [88.98, "невротик", 1], [90.12, "Блять,"], [90.78, "блять,"], [90.98, "блять,"], [91.44, "я"], [91.6, "больной,"], [92.06, "твою"], [92.52, "мать", 1], [92.8, "Я"], [93.04, "сумасшедший"], [93.84, "на"], [94.1, "голову,"], [94.82, "я"], [95.12, "кинутый"], [95.63, "Молотов", 1], [96.15, "Лечить"], [96.66, "зубы"], [97.02, "так"], [97.28, "дорого"], [97.8, "я"], [98.1, "дал"], [98.48, "в"], [98.86, "рот"], [99.24, "стоматологу", 1], [99.62, "Я"], [99.74, "уретру"], [100.55, "надрачивал"], [101.37, "сигаретой"], [102.19, "ментоловой", 1], [104.5, "На-на-на,"], [106, "на-на-на", 1], [107.5, "На-на-на,"], [109, "на-на-на", 1], [110.5, "На-на-на,"], [112, "на-на-на", 1], [113.5, "На-на-на,"], [115, "на-на-на", 1], [116.6, "А-а-а!", 1]
+        [1.02, "А"], [1.62, "это"], [1.82, "песня"], [2.18, "про"], [2.46, "нашего"], [2.68, "барабанщика"], [3.32, "Андрея", 1], [4.34, "Я"], [4.62, "сходил"], [4.94, "к"], [5.1, "хирургу,"], [5.5, "и"], [5.6, "мне"], [5.72, "опять"], [5.92, "сделали"], [6.28, "перевязку,"], [6.82, "но"], [6.96, "всё"], [7.14, "в"], [7.3, "ранах,"], [7.56, "и"], [7.72, "мне"], [7.86, "очень"], [8.18, "больно"], [8.44, "ходить", 1], [8.56, "Блять,"], [8.76, "Андрей,"], [9.32, "я"], [9.32, "умоляю,"], [9.7, "завали"], [9.94, "своё"], [11.08, "ебало."], [12.2, "Спасибо", 1], [12.52, "Меня"], [13.04, "везут"], [13.48, "куда-то"], [14.06, "дяди"], [14.46, "в"], [14.52, "белых"], [15, "халатах", 1], [15.5, "Колят"], [15.92, "мне"], [18.06, "в"], [18.26, "зад"], [18.26, "препараты,"], [18.58, "хотят"], [18.58, "засунуть"], [18.58, "в"], [18.58, "палату", 1], [19.34, "Видите"], [19.34, "ли,"], [19.56, "бегать"], [19.98, "голым,"], [20.34, "кричать"], [20.82, "на"], [21.02, "бабушек"], [21.64, "гроулом"], [21.94, "нельзя", 1], [22.32, "Идите"], [22.96, "вы"], [23.08, "нахуй,"], [23.78, "я"], [23.78, "люблю"], [24.12, "Ивана"], [24.7, "Золо", 1], [25.14, "У"], [25.36, "психиатра"], [26.14, "был"], [26.36, "чаще,"], [26.76, "чем"], [26.98, "у"], [27.24, "себя,"], [27.68, "сука,"], [28, "дома", 1], [28.34, "Прикован"], [29, "к"], [29.12, "своей"], [29.36, "постели,"], [29.96, "жизнь"], [30.38, "протекала"], [31, "хуёво", 1], [31.58, "Выдовели"], [32.4, "меня,"], [32.94, "суки,"], [33.36, "так"], [33.4, "и"], [33.68, "не"], [33.86, "смог"], [34.04, "найти"], [34.4, "выход", 1], [34.61, "Быть"], [34.82, "только"], [35.28, "среди"], [35.82, "врачей"], [36.36, "страшнее"], [37, "любых,"], [37.48, "блять,"], [38.04, "пыток", 1], [38.4, "Блять,"], [39.28, "блять,"], [39.46, "блять,"], [39.96, "я"], [40.08, "больной,"], [40.54, "твою"], [41, "мать", 1], [41.28, "Я"], [41.52, "сумасшедший"], [42.3, "на"], [42.56, "голову,"], [43.26, "я"], [43.56, "кинутый"], [44.1, "Молотов", 1], [45, "Лечить"], [45.16, "зубы"], [45.56, "так"], [45.58, "дорого"], [46.08, "я"], [46.48, "дал"], [46.74, "в"], [46.82, "рот"], [47.52, "стоматологу", 1], [47.76, "Я"], [48.12, "уретру"], [48.96, "надрачивал"], [49.5, "сигаретой"], [50.78, "ментоловой", 1], [63.6, "Я,"], [63.9, "как"], [64.24, "Болконский"], [64.92, "на"], [65.08, "небо,"], [65.44, "смотрю"], [65.86, "на"], [66.08, "вульвы"], [66.46, "бабулек", 1], [67.02, "Залез"], [67.44, "в"], [67.54, "районную"], [68.24, "ребу,"], [68.68, "чтоб"], [68.84, "наркоманов"], [69.72, "побуллить", 1], [70.28, "Как"], [70.6, "охуенно"], [71.32, "быть"], [71.48, "глупым,"], [71.98, "я"], [72.04, "злодей"], [72.2, "Майкл"], [72.8, "Ягубиан", 1], [73.46, "Я"], [74.08, "стану"], [74.24, "собакой"], [74.7, "Бучера,"], [75.52, "а"], [75.58, "ты"], [75.68, "плюшевым"], [76.28, "супером", 1], [76.66, "Я"], [76.9, "был"], [77.12, "лишён"], [77.54, "крайней"], [77.76, "плоти,"], [78.32, "не"], [78.52, "помню"], [78.88, "всех"], [79.14, "своих"], [79.5, "близких", 1], [79.9, "Хирург"], [80.34, "вернёт"], [80.8, "мои"], [81.12, "деньги,"], [81.39, "здесь"], [81.66, "все"], [81.8, "слова"], [82.28, "будут"], [82.66, "лишни", 1], [83.1, "Сегодня"], [83.68, "на"], [84.06, "перевязку,"], [84.74, "я"], [84.96, "был"], [85.16, "лишён"], [85.58, "крайней"], [85.78, "плоти", 1], [86.28, "Ты"], [86.56, "наблюдаешь"], [87.4, "за"], [87.62, "нами:"], [88.12, "да,"], [88.16, "я,"], [88.48, "походу,"], [88.98, "невротик", 1], [90.12, "Блять,"], [90.78, "блять,"], [90.98, "блять,"], [91.44, "я"], [91.6, "больной,"], [92.06, "твою"], [92.52, "мать", 1], [92.8, "Я"], [93.04, "сумасшедший"], [93.84, "на"], [94.1, "голову,"], [94.82, "я"], [95.12, "кинутый"], [95.62, "Молотов", 1], [96.32, "Лечить"], [96.66, "зубы"], [97.02, "так"], [97.28, "дорого"], [97.8, "я"], [98.1, "дал"], [98.66, "в"], [98.66, "рот"], [99, "стоматологу", 1], [99.62, "Я"], [99.74, "уретру"], [101.02, "надрачивал"], [101.26, "сигаретой"], [102.92, "ментоловой", 1], [103.5, "На-на-на,"], [105.2, "на-на-на", 1], [106.78, "На-на-на,"], [108.4, "на-на-на", 1], [110.16, "На-на-на,"], [111.76, "на-на-на", 1], [113.46, "На-на-на,"], [115.04, "на-на-на", 1], [116.2, "А-а-а!", 1]
     ]; /* формат: [время, "слово"] или [время, "слово", 1] (1 = конец строки песни) */
-    let karaokeEl = null, karaokeN = -1;
+    let karaokeEl = null, karaokeN = -1, karaokeGap = false;
     let karaokeMode = 'term'; /* 'term' — караоке в выводе терминала, 'hero' — в блоке описания под ником */
     const karaokeHero = document.getElementById('karaoke-hero');
     const splashBox = document.getElementById('splash');
     const karaokeToggleBtn = tpControls.lastElementChild; /* [ ♪ В ОПИСАНИЕ ] */
     const K_COLS = 40;
-    const K_LEAD = 1.0; /* визуальное опережение, сек: текст читается раньше вокала */
+    const K_LEAD = 0.35; /* опережение вокала, сек: подсветка чуть впереди, но близко к пению */
     const K_LINES = [];
     {
         let line = [], col = 0;
@@ -616,6 +617,7 @@
             : 'font-mono text-[12px] leading-relaxed mt-1';
         karaokeHost().appendChild(karaokeEl);
         karaokeN = -1;
+        karaokeGap = false;
         karaokeSync();
         karaokeRender();
     }
@@ -623,11 +625,24 @@
     function karaokeRender() {
         if (!KARAOKE.length || !karaokeEl) return;
         if (!karaokeEl.parentNode) karaokeHost().appendChild(karaokeEl); /* восстановка после clear */
-        const cur = (termAudio.currentTime || 0) + K_LEAD; /* опережаем вокал — есть время прочитать */
+        const cur = (termAudio.currentTime || 0) + K_LEAD; /* подсветка чуть опережает вокал */
         let n = 0;
         while (n < KARAOKE.length && KARAOKE[n][0] <= cur) n++;
-        if (n === karaokeN) return; /* без изменений — DOM не трогаем (и анимация не перезапускается) */
+        /* инструментальная пауза: большой разрыв между словами — показываем ноты */
+        const t = termAudio.currentTime || 0;
+        const nextT = n < KARAOKE.length ? KARAOKE[n][0] : Infinity;
+        const lastT = n > 0 ? KARAOKE[n - 1][0] : -Infinity;
+        const inGap = tpWanted === 'play' && nextT - t > 1.2 && t - lastT > 0.5;
+        if (n === karaokeN && inGap === karaokeGap) return; /* без изменений — DOM не трогаем (и анимация не перезапускается) */
         karaokeN = n;
+        karaokeGap = inGap;
+        if (inGap) {
+            karaokeEl.innerHTML = '<div>' + ['♩', '♪', '♫', '♪']
+                .map((nt, i) => `<span class="knote" style="animation-delay:${(i * 0.45).toFixed(2)}s">${nt}</span>`)
+                .join('') + '</div>';
+            termOut.scrollTop = termOut.scrollHeight;
+            return;
+        }
         if (!n) { karaokeEl.innerHTML = ''; return; }
         const curLine = K_LINES.findIndex(line => line.includes(n - 1));
         const lastLine = Math.min(K_LINES.length - 1, curLine + 1); /* + строка-предпросмотр */
@@ -941,16 +956,6 @@
 
         best = parseInt(localStorage.getItem('snake_best') || '0', 10);
         document.getElementById('snake-best').textContent = best;
-
-        /* legend chips */
-        const legend = document.getElementById('snake-legend');
-        TOKENS.forEach(t => {
-            const s = document.createElement('span');
-            s.className = 'px-2 py-1 border border-gray-800 bg-midark text-[10px] pixel-font';
-            s.style.color = t.color;
-            s.textContent = t.code + ' ' + t.name + ' +' + t.pts;
-            legend.appendChild(s);
-        });
 
         function pad(n, len) { return String(n).padStart(len, '0'); }
 

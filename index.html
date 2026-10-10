@@ -152,11 +152,11 @@
         </nav>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-12 sm:space-y-16">
+    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-10 sm:space-y-12">
 
         <!-- ============ HERO ============ -->
         <section id="about" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
-            <div class="space-y-5 min-w-0">
+            <div class="space-y-3 min-w-0">
                 <div class="inline-flex items-center gap-2 bg-miorange/10 text-miorange px-3 py-1.5 text-[11px] pixel-font border border-miorange/30">
                     <span class="w-2 h-2 bg-green-400 animate-pulse"></span>
                     STATUS: SYSTEM_ONLINE // GITHUB_PAGES_READY
@@ -183,14 +183,14 @@
                     <span class="text-miorange">ꗝ ||</span> B L E I Z <span class="text-miorange">(!)</span>
                 </h1>
 
-                <div id="splash" class="flex items-start -mt-3 max-w-xl min-h-[88px] sm:min-h-[96px]">
+                <div id="splash" class="flex items-start -mt-1.5 max-w-xl h-[84px]">
                     <p class="m-0 font-mono text-base sm:text-lg leading-7 text-gray-400"><span id="splash-text"></span></p>
                 </div>
 
                 <!-- караоке-режим «описание»: слова песни печатаются здесь, терминал остаётся чистым -->
-                <div id="karaoke-hero" class="hidden -mt-3 max-w-xl min-h-[88px] sm:min-h-[96px] text-gray-400"></div>
+                <div id="karaoke-hero" class="hidden -mt-1.5 max-w-xl h-[84px] text-gray-400"></div>
 
-                <div class="flex flex-wrap gap-3 pt-1">
+                <div class="flex flex-wrap gap-3">
                     <a href="#github" class="bg-miorange text-white px-4 sm:px-5 py-2.5 font-bold pixel-font text-xs sm:text-sm pixel-border hover:bg-orange-600 transition">
                         [ РЕПОЗИТОРИИ ]
                     </a>
@@ -648,11 +648,13 @@
         const cur = (termAudio.currentTime || 0) + K_LEAD; /* подсветка чуть опережает вокал */
         let n = 0;
         while (n < KARAOKE.length && KARAOKE[n][0] <= cur) n++;
-        /* инструментальная пауза: большой разрыв между словами — показываем ноты */
+        /* настоящая инструментальная пауза: входим при разрыве >2.5с (крупные вставки),
+           держим ноты пока разрыв >1.2с — короткие вокальные паузы не трогаем */
         const t = termAudio.currentTime || 0;
         const nextT = n < KARAOKE.length ? KARAOKE[n][0] : Infinity;
         const lastT = n > 0 ? KARAOKE[n - 1][0] : -Infinity;
-        const inGap = tpWanted === 'play' && nextT - t > 1.2 && t - lastT > 0.5;
+        const gapDist = nextT - t;
+        const inGap = tpWanted === 'play' && t - lastT > 0.5 && (karaokeGap ? gapDist > 1.2 : gapDist > 2.5);
         if (karaokeFading) return; /* ноты плавно растворяются — слова прорисуем следом */
         if (n === karaokeN && inGap === karaokeGap) return; /* без изменений — DOM не трогаем (и анимация не перезапускается) */
         const wasGap = karaokeGap;

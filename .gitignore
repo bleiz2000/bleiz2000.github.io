@@ -1,0 +1,7 @@
+.mimocode/
+node_modules/
+*.log
+
+# рабочие файлы ассистентов — не часть сайта
+gemini-code-*
+Pasted image*.png

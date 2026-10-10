@@ -87,6 +87,19 @@
         /* Splash typewriter */
         .qcaret { color: #FF6900; animation: blink 1s steps(1) infinite; }
 
+        /* Terminal autocomplete (zsh/fish-style overlay) */
+        .term-hint {
+            display: inline-block;
+            padding: 1px 6px;
+            margin: 1px 4px 1px 0;
+            color: #9ca3af;
+            border: 1px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .term-hint:hover { color: #FF6900; }
+        .term-hint-active { color: #FF6900; border-color: rgba(255,105,0,.4); background: rgba(255,105,0,.08); }
+
         /* Snake */
         #snakeCanvas {
             image-rendering: pixelated;
@@ -214,13 +227,16 @@
                     </div>
                 </div>
 
-                <form id="term-form" class="flex items-center gap-2 px-4 py-3 border-t border-gray-800 bg-midark/60">
-                    <label for="term-input" class="text-miorange font-mono text-xs whitespace-nowrap">bleiz@mi-term:~$</label>
-                    <input id="term-input" autocomplete="off" spellcheck="false"
-                           class="flex-1 bg-transparent text-gray-200 font-mono text-xs outline-none placeholder:text-gray-600"
-                           placeholder="help ...">
-                    <span class="caret"></span>
-                </form>
+                <div class="relative">
+                    <div id="term-hints" class="hidden absolute bottom-full left-4 right-4 mb-1 z-20 bg-midark/95 border border-gray-700 px-2 py-1.5 font-mono text-[11px] backdrop-blur-sm overflow-hidden"></div>
+                    <form id="term-form" class="flex items-center gap-2 px-4 py-3 border-t border-gray-800 bg-midark/60">
+                        <label for="term-input" class="text-miorange font-mono text-xs whitespace-nowrap">bleiz@mi-term:~$</label>
+                        <input id="term-input" autocomplete="off" spellcheck="false"
+                               class="flex-1 bg-transparent text-gray-200 font-mono text-xs outline-none placeholder:text-gray-600"
+                               placeholder="help ...">
+                        <span class="caret"></span>
+                    </form>
+                </div>
             </div>
         </section>
 
@@ -798,6 +814,48 @@
         e.preventDefault();
         runCommand(termInput.value);
         termInput.value = '';
+        termHintsUpdate();
+    });
+
+    /* ================= TERMINAL AUTOCOMPLETE ================= */
+    const termHints = document.getElementById('term-hints');
+    const TERM_CMDS = Object.keys(COMMANDS).concat(['clear', 'exit', 'logout']);
+
+    function termHintsUpdate() {
+        const typed = termInput.value.trim().toLowerCase();
+        if (!typed) { termHints.classList.add('hidden'); termHints.innerHTML = ''; return []; }
+        const matches = TERM_CMDS.filter(c => c.startsWith(typed)).slice(0, 8);
+        if (!matches.length) { termHints.classList.add('hidden'); termHints.innerHTML = ''; return []; }
+        termHints.innerHTML = matches.map((c, i) =>
+            `<span class="term-hint${i === 0 ? ' term-hint-active' : ''}" data-cmd="${c}">${c}</span>`).join('');
+        termHints.classList.remove('hidden');
+        return matches;
+    }
+
+    function termComplete(cmd) {
+        termInput.value = cmd.includes(' ') ? cmd : cmd + ' ';
+        termHintsUpdate();
+        termInput.focus();
+    }
+
+    termInput.addEventListener('input', termHintsUpdate);
+    termInput.addEventListener('blur', () => termHints.classList.add('hidden'));
+    termInput.addEventListener('focus', termHintsUpdate);
+    termInput.addEventListener('keydown', e => {
+        if (e.key === 'Tab' || e.key === 'ArrowRight') {
+            /* стрелка вправо завершает только когда каретка в конце строки */
+            if (e.key === 'ArrowRight' && (termInput.selectionStart !== termInput.value.length || termInput.selectionEnd !== termInput.value.length)) return;
+            const m = termHintsUpdate();
+            if (m.length) { e.preventDefault(); termComplete(m[0]); }
+        } else if (e.key === 'Escape') {
+            termHints.classList.add('hidden');
+        }
+    });
+    termHints.addEventListener('mousedown', e => {
+        const chip = e.target.closest('[data-cmd]');
+        if (!chip) return;
+        e.preventDefault(); /* не даём инпуту потерять фокус */
+        termComplete(chip.dataset.cmd);
     });
 
     /* Terminal boot sequence */

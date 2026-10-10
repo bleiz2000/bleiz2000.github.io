@@ -152,10 +152,10 @@
         </nav>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-6 sm:py-10 space-y-10 sm:space-y-12">
+    <main class="max-w-5xl mx-auto px-4 py-5 sm:py-8 space-y-8 sm:space-y-10">
 
         <!-- ============ HERO ============ -->
-        <section id="about" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+        <section id="about" class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center">
             <div class="space-y-3 min-w-0">
                 <div class="inline-flex items-center gap-2 bg-miorange/10 text-miorange px-3 py-1.5 text-[11px] pixel-font border border-miorange/30">
                     <span class="w-2 h-2 bg-green-400 animate-pulse"></span>
@@ -183,12 +183,12 @@
                     <span class="text-miorange">ꗝ ||</span> B L E I Z <span class="text-miorange">(!)</span>
                 </h1>
 
-                <div id="splash" class="flex items-start -mt-1.5 max-w-xl h-[84px]">
+                <div id="splash" class="flex items-start -mt-1.5 max-w-xl h-[56px] overflow-hidden">
                     <p class="m-0 font-mono text-base sm:text-lg leading-7 text-gray-400"><span id="splash-text"></span></p>
                 </div>
 
                 <!-- караоке-режим «описание»: слова песни печатаются здесь, терминал остаётся чистым -->
-                <div id="karaoke-hero" class="hidden -mt-1.5 max-w-xl h-[84px] text-gray-400"></div>
+                <div id="karaoke-hero" class="hidden -mt-1.5 max-w-xl h-[56px] overflow-hidden text-gray-400"></div>
 
                 <div class="flex flex-wrap gap-3">
                     <a href="#github" class="bg-miorange text-white px-4 sm:px-5 py-2.5 font-bold pixel-font text-xs sm:text-sm pixel-border hover:bg-orange-600 transition">
@@ -215,11 +215,11 @@
                     </div>
                 </div>
 
-                <div id="term-out" class="h-56 sm:h-64 overflow-y-auto px-4 py-3 font-mono text-[12px] leading-relaxed text-gray-300"></div>
+                <div id="term-out" class="h-52 sm:h-60 overflow-y-auto px-4 py-3 font-mono text-[12px] leading-relaxed text-gray-300"></div>
 
                 <div id="term-player" class="hidden border-t border-gray-800 bg-midark/60 px-3 py-1.5">
                     <pre id="tp-frame" class="font-mono text-[12px] leading-snug m-0"></pre>
-                    <div id="tp-controls" class="flex flex-wrap gap-1 mt-1.5"></div>
+                    <div id="tp-controls" class="flex flex-wrap justify-between gap-1 mt-1.5"></div>
                     <div id="tp-vol" class="mt-1.5 py-0.5 cursor-pointer" title="Громкость">
                         <div class="h-1 bg-gray-800">
                             <div id="tp-vol-fill" class="h-full bg-miorange" style="width:100%"></div>
@@ -482,9 +482,10 @@
         return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
     };
 
-    /* строка внутри рамки: набор сегментов, обрезается ровно до W символов */
+    /* строка внутри рамки: набор сегментов, обрезается ровно до tpW символов */
+    let tpW = 40; /* внутренняя ширина рамки в символах (пересчитывается под панель) */
     const tpLine = segs => {
-        const W = 40;
+        const W = tpW;
         let plain = '';
         const parts = [];
         for (const s of segs) {
@@ -497,15 +498,34 @@
         return `<span class="text-gray-600">║ </span><span class="text-gray-300">${parts.join('')}${' '.repeat(W - plain.length)}</span><span class="text-gray-600"> ║</span>`;
     };
 
+    /* ширина рамки в символах: ровно под доступную ширину панели (всё в одну линию) */
+    let tpCw = null; /* ширина одного символа рамки в px — измеряем один раз */
+    function tpCols() {
+        const avail = tpPanel.clientWidth - 24; /* панель px-3 */
+        if (avail <= 0) return 44;
+        if (!tpCw) {
+            const probe = document.createElement('pre');
+            probe.className = tpFrame.className;
+            probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+            probe.textContent = '═'.repeat(50);
+            tpPanel.appendChild(probe);
+            tpCw = probe.getBoundingClientRect().width / 50 || 7.2;
+            probe.remove();
+        }
+        return Math.max(44, Math.floor(avail / tpCw));
+    }
+
     function tpRender() {
         const cur = termAudio.currentTime || 0;
         const dur = termAudio.duration || 0;
         const playing = !termAudio.paused && !termAudio.ended;
         const BW = 16;
         const filled = dur ? Math.min(BW, Math.round(cur / dur * BW)) : 0;
+        const cols = tpCols();
+        tpW = cols - 4; /* '║ ' + текст + ' ║' */
 
         const lines = [
-            '<span class="text-miorange">╔═ NOW PLAYING ' + '═'.repeat(28) + '╗</span>',
+            '<span class="text-miorange">╔═ NOW PLAYING ' + '═'.repeat(cols - 16) + '╗</span>',
             tpLine([
                 { t: playing ? '▶ ' : '❚❚ ', c: playing ? 'text-green-400' : 'text-yellow-400' },
                 { t: TP_TITLE }
@@ -515,7 +535,7 @@
                 { t: '░'.repeat(BW - filled), c: 'text-gray-500' },
                 { t: '  ' + tpFmt(cur) + '/' + tpFmt(dur), c: 'text-gray-400' }
             ]),
-            '<span class="text-miorange">' + '╚' + '═'.repeat(42) + '╝</span>'
+            '<span class="text-miorange">' + '╚' + '═'.repeat(cols - 2) + '╝</span>'
         ];
         tpFrame.innerHTML = lines.join('\n');
 
@@ -559,6 +579,7 @@
         tpButton('[ ■ ]', () => { termStop(); termPrint(PROMPT + ' stop', 'text-gray-500'); termPrint('> ■ playback stopped', 'text-red-400'); }),
         tpButton('[ ♪ ОПИСАНИЕ ]', () => karaokeSetMode(karaokeMode === 'term' ? 'hero' : 'term'))
     );
+    window.addEventListener('resize', () => { if (tpTimer) tpRender(); }); /* рамка всегда в ширину панели */
 
     /* --- громкость: одна тонкая линия, клик/перетаскивание --- */
     const tpVolLine = document.getElementById('tp-vol');

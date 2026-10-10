@@ -2,7 +2,8 @@
 
 Pixel-cyberpunk portfolio: terminal with easter eggs, GitHub repos feed, contacts and an arcade Snake.
 
-**Stack:** single `index.html`, Tailwind (CDN), vanilla JS, no build step.
+**Stack:** single self-contained `index.html` — Tailwind (CDN), vanilla JS, no build step.
+The avatar is embedded as a base64 data URI, so the whole site is **one file**.
 
 ## Arcade Snake
 
